@@ -1,0 +1,388 @@
+﻿================================================================================
+Download2 v0.1.0 - THIRD-PARTY COMPONENT NOTICES
+================================================================================
+
+Hand-maintained file. Add a section here when vendor/modules.txt gains a module.
+The in-app list (panel > About > Acknowledgements, frontend/index.html) names the same
+components one line each; this file is that list's distribution-compliance superset,
+so it goes down to the verbatim text of every license.
+
+What is covered here:
+      7  Go modules linked into download2.exe (windows/amd64)        - SECTION A
+      2  Go modules vendored but not linked by the windows build     - SECTION A, 'Linked : no'
+      2  build and run-time components, one of them link-only        - SECTION B
+  10 sections carry the verbatim license text, 1 is link-only by design (see its Note), 0 unbundled.
+
+Why the transitive modules are here at all: BSD-3-Clause requires a copy of the license to
+accompany distribution, and a statically linked transitive Go module counts as distributed
+just as much as a direct requirement does. Six of the nine vendored modules are not direct
+requirements in go.mod - they arrive through Wails v3, and four of those are linked in.
+
+Every text below is a verbatim copy of a file shipped by that component's own authors, taken
+from the exact version in ./vendor (for the Go toolchain: the local GOROOT this product was
+built with). Where a component states a license identifier in two places (in-app declaration,
+package metadata) and the text reads differently, the text governs.
+
+Re-check the linked set after any dependency change with:
+    GOOS=windows GOARCH=amd64 go list -deps ./... | grep <module path>
+A hit means it is in the binary; no hit means the section below is acknowledgement only.
+
+--------------------------------------------------------------------------------
+SECTION A - GO MODULES VENDORED UNDER ./vendor
+--------------------------------------------------------------------------------
+
+Every 'Linked : yes' module is statically linked into the executable for windows/amd64,
+direct or transitive. A 'Linked : no' section names one that vendor/ carries and go.mod
+requires, while the windows build reaches no package of it - so not a byte of it is in
+download2.exe, and its text is bundled anyway because vendor/ is the manifest here.
+
+--------------------------------------------------------------------------------
+[Go] github.com/adrg/xdg v0.5.3
+--------------------------------------------------------------------------------
+  Module        : github.com/adrg/xdg v0.5.3
+  License       : MIT - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/adrg/xdg
+  Source        : vendor/github.com/adrg/xdg/LICENSE
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Adrian-George Bostan <adrg@epistack.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/coder/websocket v1.8.14
+--------------------------------------------------------------------------------
+  Module        : github.com/coder/websocket v1.8.14
+  License       : ISC - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : no - windows/amd64
+  Upstream      : https://github.com/coder/websocket
+  Source        : vendor/github.com/coder/websocket/LICENSE.txt
+  Note          : Required by Wails v3's module graph. No package of it appears in
+                  'go list -deps' for windows, linux or darwin as this product builds,
+                  so no byte of it is in download2.exe. Its text is bundled anyway -
+                  vendor/ is the manifest this file follows.
+
+Copyright (c) 2025 Coder
+
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/fsnotify/fsnotify v1.10.1
+--------------------------------------------------------------------------------
+  Module        : github.com/fsnotify/fsnotify v1.10.1
+  License       : BSD-3-Clause - full text below
+  Role          : direct requirement in go.mod
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/fsnotify/fsnotify
+  Source        : vendor/github.com/fsnotify/fsnotify/LICENSE
+
+Copyright © 2012 The Go Authors. All rights reserved.
+Copyright © fsnotify Authors. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright notice, this
+  list of conditions and the following disclaimer in the documentation and/or
+  other materials provided with the distribution.
+* Neither the name of Google Inc. nor the names of its contributors may be used
+  to endorse or promote products derived from this software without specific
+  prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/go-ole/go-ole v1.3.0
+--------------------------------------------------------------------------------
+  Module        : github.com/go-ole/go-ole v1.3.0
+  License       : MIT - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/go-ole/go-ole
+  Source        : vendor/github.com/go-ole/go-ole/LICENSE
+
+The MIT License (MIT)
+
+Copyright © 2013-2017 Yasuhiro Matsumoto, <mattn.jp@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the “Software”), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/godbus/dbus/v5 v5.2.2
+--------------------------------------------------------------------------------
+  Module        : github.com/godbus/dbus/v5 v5.2.2
+  License       : BSD-3-Clause - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : no - windows/amd64
+  Upstream      : https://github.com/godbus/dbus
+  Source        : vendor/github.com/godbus/dbus/v5/LICENSE
+  Note          : Linked only where D-Bus is the desktop (linux). The windows build
+                  of download2.exe reaches no package of it. Text bundled anyway, same
+                  reason as above.
+
+Copyright (c) 2013, Georg Reinke (<guelfey at gmail dot com>), Google
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/mattn/go-colorable v0.1.14
+--------------------------------------------------------------------------------
+  Module        : github.com/mattn/go-colorable v0.1.14
+  License       : MIT - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/mattn/go-colorable
+  Source        : vendor/github.com/mattn/go-colorable/LICENSE
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Yasuhiro Matsumoto
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/mattn/go-isatty v0.0.20
+--------------------------------------------------------------------------------
+  Module        : github.com/mattn/go-isatty v0.0.20
+  License       : MIT - full text below
+  Role          : indirect in go.mod - pulled in through Wails v3
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/mattn/go-isatty
+  Source        : vendor/github.com/mattn/go-isatty/LICENSE
+
+Copyright (c) Yasuhiro MATSUMOTO <mattn.jp@gmail.com>
+
+MIT License (Expat)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] github.com/wailsapp/wails/v3 v3.0.0-beta.28
+--------------------------------------------------------------------------------
+  Module        : github.com/wailsapp/wails/v3 v3.0.0-beta.28
+  License       : MIT - full text below
+  Role          : direct requirement in go.mod
+  Linked        : yes - windows/amd64
+  Upstream      : https://github.com/wailsapp/wails
+  Source        : vendor/github.com/wailsapp/wails/v3/LICENSE
+
+MIT License
+
+Copyright (c) 2018-Present Lea Anthony
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+[Go] golang.org/x/sys v0.48.0
+--------------------------------------------------------------------------------
+  Module        : golang.org/x/sys v0.48.0
+  License       : BSD-3-Clause - full text below
+  Role          : direct requirement in go.mod
+  Linked        : yes - windows/amd64
+  Upstream      : https://pkg.go.dev/golang.org/x/sys
+  Source        : vendor/golang.org/x/sys/LICENSE
+
+Copyright 2009 The Go Authors.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google LLC nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+SECTION B - BUILT WITH, OR RUN ON, THE MACHINE
+--------------------------------------------------------------------------------
+
+Nothing here is a library download2 links against at the source level; these are the
+toolchain that produces the exe and the runtime the exe needs on the host. No font is
+bundled either: the interface asks Windows for Segoe UI and Microsoft YaHei, and ships
+no glyph data of its own.
+
+--------------------------------------------------------------------------------
+[RT] Go toolchain 1.26.1
+--------------------------------------------------------------------------------
+  Component     : Go toolchain 1.26.1 (windows/amd64)
+  License       : BSD-3-Clause - full text below
+  Linked        : no - the compiler builds the exe, it is not distributed with it
+  Upstream      : https://go.dev
+  Source        : GOROOT/LICENSE (F:/Program Files/Go/LICENSE)
+
+Copyright 2009 The Go Authors.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+   * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+   * Neither the name of Google LLC nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------
+[RT] Microsoft Edge WebView2 Runtime
+--------------------------------------------------------------------------------
+  Component     : Microsoft Edge WebView2 Runtime
+  License       : link-only on purpose - Microsoft terms are not redistributable as text
+  Linked        : no - download2.exe loads the runtime the host already has; no DLL ships
+  Upstream      : https://learn.microsoft.com/microsoft-edge/webview2/
+  Note          : Microsoft software. Its license terms are Microsoft's to distribute,
+                  not ours, so no text is bundled here - read them at the URL above.
+                  scripts/build.ps1 reads the registry and warns at build time when the
+                  runtime is missing, because the exe would then build fine and show a
+                  white window.
+
+(no license text bundled - see the URL above)
+

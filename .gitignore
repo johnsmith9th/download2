@@ -1,0 +1,16 @@
+# 构建产物
+build/bin/
+dist/
+*.exe
+
+# 运行/调试日志
+*_log.txt
+*.log
+
+# UI 验证截图
+shots/
+
+# 依赖与本地环境
+vendor/
+node_modules/
+.wails/

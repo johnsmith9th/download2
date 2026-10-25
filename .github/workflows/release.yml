@@ -1,0 +1,147 @@
+name: Release
+
+# 打了 v* 标签才出货；手动触发只产出临时构建物，不建 Release。
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 只在手动触发时用来打版本号（不会建标签）
+        required: false
+        default: "0.0.0-dev"
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # 本机的构建前提是「vendor/ 已在库里、之后不再碰网络」，而 vendor/ 被 .gitignore 挡着，
+      # 所以 CI 这一段现取一次依赖再 vendor 出来，后面 -mod=vendor 才有东西可指。
+      - name: Vendor dependencies
+        run: go mod vendor
+
+      - name: Check formatting
+        shell: pwsh
+        run: |
+          # 不用 `gofmt -l .`：它会走进 vendor/，而上游那些包本来就不带 gofmt 干净（本机实测列出 90 多个
+          # vendor 文件），CI 里的 vendor 还是现 go mod vendor 出来的 —— 卡在这只会假红。
+          $files = (Get-ChildItem -Recurse -File -Filter *.go |
+                    Where-Object { $_.FullName -notmatch '[\\/]vendor[\\/]' }).FullName
+          $bad = gofmt -l $files
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($bad) {
+            Write-Host "gofmt wants these rewritten:"
+            $bad | ForEach-Object { Write-Host "  $_" }
+            exit 1
+          }
+          Write-Host "gofmt clean ($($files.Count) files)."
+
+      - name: Vet and test
+        shell: pwsh
+        run: |
+          go vet ./...
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # -p 1 不是图稳的保守，是这套用例本身定的：detect 与 watch 跑的是真文件真监听真句柄，
+          # 四个包并发抢 CPU 时 watch 会吊到 10 分钟超时被杀（本机实测 FAIL 602s），
+          # 串起来跑全套 39s 六包全绿。窗口 runner 是 4 核，正好撞上同一条。
+          go test ./... -count=1 -p 1 -timeout 20m
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Resolve version
+        id: ver
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $v = "${{ github.ref_name }}" -replace '^v', ''
+          } else {
+            $v = "${{ inputs.version }}"
+          }
+          Write-Host "version = $v"
+          "value=$v" >> $env:GITHUB_OUTPUT
+
+      # 走仓库里那唯一一条构建入口，不在这里另抄一份 go build ——
+      # 抄一份就等于允许 CI 和本地编出两种东西。
+      - name: Build
+        shell: pwsh
+        run: .\scripts\build.ps1 -Version "${{ steps.ver.outputs.value }}"
+
+      - name: Package
+        id: pack
+        shell: pwsh
+        run: |
+          $stamp = "download2-${{ steps.ver.outputs.value }}-windows-x64"
+          $stage = "dist\$stamp"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item build\bin\download2.exe $stage
+          Copy-Item README.md, THIRD_PARTY_NOTICES_OF_DOWNLOAD2.TXT $stage
+          Compress-Archive -Path "$stage\*" -DestinationPath "dist\$stamp.zip"
+          $zipHash = (Get-FileHash -Algorithm SHA256 -Path "dist\$stamp.zip").Hash.ToLower()
+          $exeHash = (Get-FileHash -Algorithm SHA256 -Path build\bin\download2.exe).Hash.ToLower()
+          "$zipHash  $stamp.zip" | Set-Content -Encoding ascii "dist\$stamp.zip.sha256"
+          Write-Host "zip = $zipHash"
+          Write-Host "exe = $exeHash"
+          "zip=$zipHash" >> $env:GITHUB_OUTPUT
+          "exe=$exeHash" >> $env:GITHUB_OUTPUT
+          "stamp=$stamp" >> $env:GITHUB_OUTPUT
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pack.outputs.stamp }}
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+
+      # 只有标签才建 Release：手动触发那一次没有标签，建出来的 Release 对不上任何 commit，
+      # 反而成了别人以为能用的货。
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.ver.outputs.value }}
+          TAG: ${{ github.ref_name }}
+          ZIP_SHA256: ${{ steps.pack.outputs.zip }}
+          EXE_SHA256: ${{ steps.pack.outputs.exe }}
+        run: |
+          set -euo pipefail
+          STAMP="download2-${VERSION}-windows-x64"
+          cat > notes.md <<EOF
+          下载 \`$STAMP.zip\`，解压后双击 \`download2.exe\`。
+
+          **要跑的机器上得有 WebView2 Runtime**（Win10/11 一般自带，Edge 里也带着）。这个包**不随带 WebView2 DLL**，缺了它窗口只给你一页白屏错误。
+
+          首次运行大概率被应用控制或 SmartScreen 拦一下 —— 那是策略不是 bug，放行这个哈希就行：
+
+          \`\`\`
+          $STAMP.zip   SHA-256 $ZIP_SHA256
+          download2.exe   SHA-256 $EXE_SHA256
+          \`\`\`
+
+          日志写在 exe 旁边的 \`download2_log.txt\`（\`-H windowsgui\` 之后 stdout 全丢，只剩这一份文件）。
+
+          已知欠项：exe 里嵌了图标（\`tools/genicon\` 的 \`.rc\` 编成 \`icon_windows_amd64.syso\`，资源 ID 3），但**没有版本信息资源** —— 右键「属性 → 详细信息」里那套版本号还是空的。
+          EOF
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "dist/$STAMP.zip" "dist/$STAMP.zip.sha256" --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" \
+              --title "$STAMP" \
+              --notes-file notes.md \
+              "dist/$STAMP.zip" "dist/$STAMP.zip.sha256"
+          fi
+          gh release view "$TAG"

@@ -1,0 +1,320 @@
+/* 原地展开的配置面板：三个 Tab（常规/高级/关于）+ 标题行的主题与关闭。
+   高度跟 Go 的 layout.panelH 走，内容超出时面板自己滚，不换窗口尺寸 ——
+   尺寸由 Go 定，DOM 只负责填。颜色 token 全在 pill.css 的 :root 里。 */
+
+.panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 10px 13px 10px;
+  border-radius: 16px;
+  background: var(--surface-panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 3px 16px var(--shadow);
+  animation: grow .16s ease-out 1;
+}
+.panel[hidden] { display: none; }
+@keyframes grow { from { opacity: .4; } to { opacity: 1; } }
+
+/* 标题行是展开态唯一的拖拽处（药丸一直贴边，但被面板挤远之后不好够）。
+   v3 的拖拽判定读的是 event.target 的**计算值**，自定义属性会继承 ——
+   所以行里每一颗按钮必须落到 no-drag（pill.css 的 `button` 那条规则干的就是这件事），
+   否则点 ✕ 会变成拖窗口，而按钮一次也不会被按下。 */
+.phead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hr);
+  --wails-draggable: drag;
+}
+.tabs { display: flex; gap: 4px; }
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-weight: 600;
+  opacity: .62;
+}
+.tab:hover { background: var(--btn-hover); opacity: .9; }
+.tab[aria-selected="true"] {
+  background: var(--btn);
+  border-color: var(--btn-line);
+  opacity: 1;
+}
+.icon {
+  width: 26px;
+  padding: 3px 0;
+  text-align: center;
+  line-height: 1.15;
+  opacity: .8;
+}
+.icon:hover { opacity: 1; }
+
+.pane[hidden] { display: none; }
+/* 关于那一栏的字是要被人复制走的（邮箱），所以这一栏破一次 user-select: none 的例。 */
+.pane[data-pane="about"] { user-select: text; -webkit-user-select: text; }
+
+.field { display: block; margin: 0 0 10px; }
+.lab {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+  opacity: .78;
+}
+.row { display: flex; gap: 6px; align-items: center; }
+.row.btns { margin-top: 5px; }
+
+/* 转移目录那一行是可编辑的 combobox：输入框 + ▾（常用列表）+ 浏览…，三件挤在同一行，
+   因为这一行只管一件事：文件往哪儿搬。常用列表是浮层，不吃面板高度 ——
+   340 DIP 那个数由 Go 定（layout.panelH），加一档进来就撑出滚动条。 */
+.combo { position: relative; }
+.combo input[type="text"] { flex: 1 1 auto; min-width: 0; width: auto; }
+.combo > button { flex: none; }
+/* ▾ 贴到输入框右边：吃掉 .row 那道 gap、相接的两个角抹平、底色跟输入框同一种。
+   隔开 6px 它就变成一颗独立按钮，而独立按钮在这个界面里的意思是「开了一个原生对话框」——
+   那是「浏览…」的活。两颗挨着却各说各话，反而没人去找那一串常用目录。 */
+#target { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+#target-menu {
+  margin-left: -6px;
+  padding: 5px 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-color: var(--field-line);
+  border-left-color: transparent;
+  background: var(--field);
+  opacity: .9;
+}
+#target-menu:hover { background: var(--btn-hover); opacity: 1; }
+#target-menu:active { background: var(--btn-active); }
+
+.pop {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: 152px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--field-line);
+  border-radius: 9px;
+  background: var(--surface-panel);
+  /* 同一层色再叠一次（口径同 .ack）：这一层底色是半透的，而它后面就是「打开/查看」那一排字，
+     只改 alpha 会把它们压成一行行残影。 */
+  background-image: linear-gradient(var(--surface-panel), var(--surface-panel));
+  box-shadow: 0 3px 12px var(--shadow);
+}
+/* .pop 自己是 display:flex，光靠 hidden 属性压不住（口径同 .foot、.ack）。 */
+.pop[hidden] { display: none; }
+.opt { display: flex; align-items: center; gap: 2px; }
+.opt .pick {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: block;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10.5px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.opt .pick:hover { background: var(--btn-hover); }
+/* 正在用的那一条只给一记颜色、不给一颗勾：勾要吃掉字宽，而这一栏每一像素都在跟路径抢地方。 */
+.opt.cur .pick { color: var(--accent); }
+.opt .x {
+  flex: none;
+  width: 20px;
+  padding: 2px 0;
+  font-size: 11px;
+  line-height: 1.15;
+  opacity: .42;
+}
+.opt .x:hover { opacity: 1; }
+.pop .empty { display: block; padding: 5px 7px; font-size: 10.5px; line-height: 1.45; opacity: .6; }
+
+input[type="text"], input[type="number"] {
+  font: inherit;
+  color: var(--fg);
+  background: var(--field);
+  border: 1px solid var(--field-line);
+  border-radius: 8px;
+  padding: 5px 7px;
+  box-sizing: border-box;
+  width: 100%;
+  --wails-draggable: no-drag;
+}
+input[type="text"][readonly] { cursor: default; }
+input[type="number"] { width: 76px; text-align: right; }
+input.num { width: 46px; }
+input:focus-visible { outline: 1px solid var(--focus); outline-offset: 0; }
+
+.unit { opacity: .6; }
+.hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: .6;
+  word-break: break-all;
+}
+.hint.bad { opacity: 1; color: var(--bad-text); }
+.hint.good { opacity: 1; color: var(--ok-text); }
+
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 9px;
+  cursor: pointer;
+}
+.switch input[type="checkbox"] {
+  width: 14px; height: 14px;
+  accent-color: var(--accent);
+  margin: 0;
+  --wails-draggable: no-drag;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hr);
+}
+/* .foot 自己是 display:flex，光靠 hidden 属性压不住（作者样式赢过 UA 样式），
+   所以这一行「有话说才出现」得显式写一遍。 */
+.foot[hidden] { display: none; }
+.save-state { font-size: 11px; opacity: .8; }
+.save-state.bad { color: var(--bad-text); opacity: 1; }
+.save-state.good { color: var(--ok-text); opacity: 1; }
+
+.note {
+  margin: 9px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: .5;
+}
+
+/* 关于那一栏：产品名、版本、作者、邮箱。名字是这一栏唯一的标题，
+   所以给它比 .lab 更重的一档，别的行都压成「键 值」两段。 */
+.about-name {
+  margin: 2px 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+.about-line {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 5px;
+}
+/* 34px 只够两个汉字，而英文那一列是 "Version" —— 定宽会把首字母裁掉。
+   改成 min-width：中文三行都撑到 50 所以仍然对齐，英文最长的那句也在 50 以内。 */
+.about-line .k { flex: 0 0 auto; min-width: 50px; opacity: .6; }
+#about-mail { user-select: all; -webkit-user-select: all; }
+
+/* 致谢弹层：只盖面板那一段，把药丸那条边让出来（药丸高 + #shell 的 gap 6 + padding 2）。
+   整窗覆盖在这颗药丸上等于把暂停/退出/拖走一起挡掉，而读这一页的那一分钟里这三件事仍要能按。
+   它是 #shell 的孩子而不是 .panel 的孩子：.panel 自己会滚，绝对定位放在里面会跟着内容一起走。
+   默认那两档（top/bottom）按 drop=up，也就是面板在药丸上方。 */
+.ack {
+  position: fixed;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  bottom: calc(var(--pill-h) + 8px);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 10px 13px;
+  border-radius: 16px;
+  /* 面板就在它身后，而这套界面的底色刻意是半透的：同一层色再叠一次（.92×.92≈.99）就把
+     后面那页的字压成了几乎看不见的残影，又不至于变成一块死白 —— 只改 alpha 会连桌面的透感一起丢掉。 */
+  background: var(--surface-panel);
+  background-image: linear-gradient(var(--surface-panel), var(--surface-panel));
+  border: 1px solid var(--line);
+  box-shadow: 0 3px 16px var(--shadow);
+  animation: grow .16s ease-out 1;
+  /* 这一页是要被人复制走的（邮箱那一栏开过的例，这里同样开）。 */
+  user-select: text;
+  -webkit-user-select: text;
+}
+#shell[data-drop="down"] .ack {
+  top: calc(var(--pill-h) + 8px);
+  bottom: 2px;
+}
+/* .ack 自己是 display:flex，光靠 hidden 属性压不住（口径同 .foot）。 */
+.ack[hidden] { display: none; }
+
+/* 面板头被盖住了，所以这一行自己得是拖拽区 —— 否则展开态没有地方可以拖窗口。 */
+.ackhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hr);
+  --wails-draggable: drag;
+}
+.acktitle { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .3px; }
+/* 清单会长：加一个依赖就多一行，而窗口高度由 Go 定（340 DIP），所以滚的是这一层。 */
+.ackbody { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 4px; }
+.ackintro { margin: 0; font-size: 11px; line-height: 1.5; opacity: .72; }
+.ackbody section { margin-top: 10px; }
+.ackbody h4 {
+  margin: 0 0 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  opacity: .6;
+}
+.ackbody ul { margin: 0; padding: 0; list-style: none; }
+.ackbody li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--hr);
+}
+.ackbody .line { display: flex; align-items: baseline; gap: 7px; }
+.ackbody b { font-size: 12px; font-weight: 600; }
+.ack .lic {
+  flex: none;
+  padding: 0 5px;
+  border: 1px solid var(--field-line);
+  border-radius: 4px;
+  font-size: 10px;
+  opacity: .72;
+  white-space: nowrap;
+}
+/* 没有「打开浏览器」这条 Binding，地址就只能靠复制 —— 那它必须选得中、且省略号不能把域名吃掉。 */
+.ack .url {
+  overflow: hidden;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: .6;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.ack .note { margin-top: 12px; }
+
+/* 面板右边缘对齐药丸右边缘：药丸窄、面板宽，差的那截往左长。
+   这条与 drop 无关 —— 上下翻转不改变「右边对齐」这件事。 */
+#shell[data-m="panel"] .pill { align-self: flex-end; }

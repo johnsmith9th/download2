@@ -1,0 +1,4 @@
+# gofmt 比的是 LF。GitHub 的 Windows runner 检出时带着 core.autocrlf=true，.go 全变成 CRLF，
+# 于是每个文件都被判成「格式要重排」（空跑第一次就是这么红的，一秒退）。
+# 钉死 eol=lf 之后本地和 CI 拿到的是同一份字节，这条判定才有意义。
+*.go text eol=lf

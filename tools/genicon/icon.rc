@@ -1,0 +1,14 @@
+// The exe's application icon. scripts\build.ps1 compiles this into
+// icon_windows_amd64.syso with windres, and go build links that .syso automatically.
+//
+// This file and the .ico it names live next to tools\genicon\gen_icon.py, not under build\:
+// build\ is artifacts only and -Clean deletes all of it, which once took the icon's own
+// sources with it and left the next build unable to restore them.
+//
+// windres resolves the path below relative to this file, not to the caller's cwd.
+//
+// ID must be 3: wails v3 loads the embedded app icon by that fixed resource ID for its
+// message and task dialogs (see vendor\github.com\wailsapp\wails\v3\pkg\application\
+// dialogs_windows.go, LoadIconWithResourceID(handle, 3)). Any other ID still shows up in
+// Explorer, but the dialogs fall back to the system icon.
+3 ICON "icon.ico"

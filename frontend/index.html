@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Download2</title>
+<link rel="stylesheet" href="css/pill.css" />
+<link rel="stylesheet" href="css/panel.css" />
+</head>
+<body>
+<!-- 三层：药丸、面板、toast。谁在上谁在下由 Go 定的 drop 决定（见 ui.go 的 decideDrop），
+     DOM 只用 order 翻一次排列顺序。窗口尺寸由 Go 定（layout 常量），DOM 只按这个顺序填，
+     两边共用同一组数字。 -->
+<div id="shell">
+  <div id="toast" class="toast" hidden>
+    <span class="t-ico" aria-hidden="true"></span>
+    <span class="t-text"></span>
+  </div>
+
+  <section id="panel" class="panel" hidden aria-label="配置" data-i18n-aria="panel.aria">
+    <header class="phead">
+      <span class="tabs" role="tablist" aria-label="配置分栏" data-i18n-aria="tabs.aria">
+        <button class="tab" type="button" role="tab" data-pane="main" aria-selected="true" data-i18n="tab.main">常规</button>
+        <button class="tab" type="button" role="tab" data-pane="adv" aria-selected="false" data-i18n="tab.adv">高级</button>
+        <button class="tab" type="button" role="tab" data-pane="about" aria-selected="false" data-i18n="tab.about">关于</button>
+      </span>
+      <span class="sp"></span>
+      <!-- 标题行也在拖拽区里（药丸之外没有别的可拖），这三颗必须显式 no-drag，
+           否则点下去整颗面板被一起拖走（见 pill.css 的按钮规则）。 -->
+      <!-- 语言与配色成对放在这颗开关位上：两者都只是外观，都不进 rebuild，
+           而且点一下就该完 —— 占一整行字段的话高级页那一屏要撑出滚动条。
+           钮上刻意写「文A」这种两语通吃的记号（翻成「EN」或「中文」都会先假定一种起始语言），
+           给人看的说明放在 title 里，那里按当前语言翻。 -->
+      <button id="lang" class="icon" type="button" title="切换到英文" aria-pressed="false">文A</button>
+      <button id="theme" class="icon" type="button" title="切到浅色">◐</button>
+      <button id="close" class="icon" type="button" title="收起配置（Esc）" data-i18n-title="btn.gearClose">✕</button>
+    </header>
+
+    <div class="pane" data-pane="main">
+      <label class="field">
+        <span class="lab" data-i18n="lab.target">转移目录</span>
+        <!-- 可编辑的 combobox：输入框可以直接打路径（失焦或回车才落盘，口径同其它控件），
+             ▾ 开的是「常用转移目录」那一串（settings.json 的 targetDirPresets，见设计书），
+             「浏览…」跟它们同一行 —— 这一行只管一件事：文件往哪儿搬。 -->
+        <span class="row combo">
+          <input id="target" type="text" spellcheck="false" autocomplete="off" placeholder="还没设置" data-i18n-placeholder="ph.unset" />
+          <button id="target-menu" class="icon" type="button" title="常用转移目录" data-i18n-title="combo.title"
+                  aria-controls="target-pop" aria-expanded="false">▾</button>
+          <button id="browse" type="button" data-i18n="btn.browse">浏览…</button>
+          <!-- 这一层是一组按钮而不是 role="listbox"：每一行右边还挂着一颗 ✕，
+               而 option 里不许有可点的东西 —— 宁可要一组读屏器念得出来的按钮。 -->
+          <span class="pop" id="target-pop" role="group" aria-label="常用转移目录" data-i18n-aria="combo.title" hidden></span>
+        </span>
+        <span class="row btns">
+          <button id="open" type="button" data-i18n="btn.open">打开</button>
+          <button id="view" type="button" title="打开今天落档的那个目录；今天那一档还没有就打开转移目录" data-i18n-title="view.title" data-i18n="btn.view">查看</button>
+          <button id="viewlog" type="button" title="用记事本打开搬运流水 moves.jsonl" data-i18n-title="viewlog.title" data-i18n="btn.viewlog">查看日志</button>
+          <button id="clearlog" type="button" title="清空搬运流水与运行日志，不问第二次；崩溃账本不在它动的范围里" data-i18n-title="clearlog.title" data-i18n="btn.clearlog">清空日志</button>
+        </span>
+        <span class="hint" id="target-hint"></span>
+      </label>
+
+      <label class="switch">
+        <input id="dateSubdirs" type="checkbox" />
+        <span data-i18n="chk.dateSubdirs">按下载日期分子目录</span>
+      </label>
+
+      <label class="switch">
+        <input id="toastEnabled" type="checkbox" />
+        <span data-i18n="chk.toast">搬完提示</span>
+        <input id="toastSeconds" class="num" type="number" min="1" max="10" step="1" />
+        <span class="unit" data-i18n="unit.seconds">秒</span>
+      </label>
+
+      <p class="note" data-i18n="note.conflict">同名文件会自动加 (1)、(2)：Windows 的改名会静默吃掉目标里已有的文件，
+        这个保护不关。</p>
+    </div>
+
+    <div class="pane" data-pane="adv" hidden>
+      <label class="field">
+        <span class="lab" data-i18n="lab.source">监控目录</span>
+        <span class="row">
+          <input id="source" type="text" readonly spellcheck="false" />
+        </span>
+        <span class="row btns">
+          <button id="relocate" type="button" data-i18n="btn.relocate">重新定位</button>
+        </span>
+        <span class="hint" id="source-hint"></span>
+      </label>
+
+      <label class="field">
+        <span class="lab" data-i18n="lab.quietMs">静置阈值（ms）</span>
+        <span class="row"><input id="quietMs" type="number" min="200" max="5000" step="50" /></span>
+        <span class="hint" data-i18n="hint.quietMs">停止变化这么久之后才考虑搬，200–5000。</span>
+      </label>
+
+      <label class="field">
+        <span class="lab" data-i18n="lab.maxSettle">最长等待（秒）</span>
+        <span class="row"><input id="maxSettleMs" type="number" min="10" max="3600" step="10" /></span>
+        <span class="hint" data-i18n="hint.maxSettle">超过它还判定不成就地留着，只提示不强搬，10–3600。</span>
+      </label>
+    </div>
+
+    <div class="pane" data-pane="about" hidden>
+      <p class="about-name">Download2</p>
+      <p class="about-line"><span class="k" data-i18n="about.version">版本</span><span id="about-version">—</span></p>
+      <p class="about-line"><span class="k" data-i18n="about.author">作者</span><span>johnsmith9th</span></p>
+      <p class="about-line"><span class="k" data-i18n="about.mail">邮箱</span><span id="about-mail">johnsmith9th@yahoo.com</span></p>
+      <span class="row btns">
+        <!-- 致谢开的是一个弹层（#ackdlg），不是第四个 Tab：Tab 是并列的配置项，这一页只是「关于」的附属说明。 -->
+        <button id="ack" type="button" data-i18n="btn.ack">致谢</button>
+      </span>
+    </div>
+
+    <!-- 没有「保存」按钮：控件值一变就当场落盘（见 main.js 的 change 监听）。
+         这一行只剩状态文字，报错和「已保存」都写在这里；没话说时整行收掉（saveState）。 -->
+    <div class="foot" hidden>
+      <span id="save-state" class="save-state"></span>
+    </div>
+  </section>
+
+  <!-- 致谢弹层。清单是写死在这里的静态内容，正文**永久英文**：项目名、SPDX 许可证标识、上游地址
+       都是语言中立专名，翻成中文只会让这张表和上游漂移，而漂移的代价是用户按一个译过的名字找不到源头。
+       所以这些句子刻意不进 js/i18n.js 的字典（那是中英两包对等那条纪律的一个显式例外，理由记在设计书「界面」一节），
+       跟着界面语言走的只有关于页那颗按钮和这里这颗关闭键 —— 它们是外壳，不是这一页的内容。
+       它只盖面板那一段，药丸露在外面（尺寸见 panel.css 的 .ack）：读这一页的那一分钟里暂停/退出/拖走仍然要能按。 -->
+  <section id="ackdlg" class="ack" role="dialog" aria-labelledby="ack-title" tabindex="-1" hidden>
+    <header class="ackhead">
+      <h3 id="ack-title" class="acktitle">Acknowledgements</h3>
+      <span class="sp"></span>
+      <button id="ackclose" class="icon" type="button" title="关闭（Esc）" data-i18n-title="btn.ackClose">✕</button>
+    </header>
+
+    <div class="ackbody">
+      <p class="ackintro">Download2 stands on the work below. The list names what the shipped
+        binary links against, in the words their own authors use.</p>
+
+      <section>
+        <h4>Go</h4>
+        <ul>
+          <li>
+            <span class="line"><b>Wails v3</b><span class="lic">MIT</span></span>
+            <code class="url">https://github.com/wailsapp/wails</code>
+          </li>
+          <li>
+            <span class="line"><b>fsnotify</b><span class="lic">BSD-3-Clause</span></span>
+            <code class="url">https://github.com/fsnotify/fsnotify</code>
+          </li>
+          <li>
+            <span class="line"><b>golang.org/x/sys</b><span class="lic">BSD-3-Clause</span></span>
+            <code class="url">https://pkg.go.dev/golang.org/x/sys</code>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h4>Go, linked through Wails</h4>
+        <ul>
+          <li>
+            <span class="line"><b>xdg</b><span class="lic">MIT</span></span>
+            <code class="url">https://github.com/adrg/xdg</code>
+          </li>
+          <li>
+            <span class="line"><b>go-ole</b><span class="lic">MIT</span></span>
+            <code class="url">https://github.com/go-ole/go-ole</code>
+          </li>
+          <li>
+            <span class="line"><b>go-colorable</b><span class="lic">MIT</span></span>
+            <code class="url">https://github.com/mattn/go-colorable</code>
+          </li>
+          <li>
+            <span class="line"><b>go-isatty</b><span class="lic">MIT</span></span>
+            <code class="url">https://github.com/mattn/go-isatty</code>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h4>Runtime</h4>
+        <ul>
+          <li>
+            <span class="line"><b>Go toolchain</b><span class="lic">BSD-3-Clause</span></span>
+            <code class="url">https://go.dev</code>
+          </li>
+          <li>
+            <span class="line"><b>Microsoft Edge WebView2 Runtime</b><span class="lic">Microsoft license terms</span></span>
+            <code class="url">https://learn.microsoft.com/microsoft-edge/webview2/</code>
+          </li>
+        </ul>
+      </section>
+
+      <p class="note">Names, license identifiers and links are upstream's; identifiers follow SPDX
+        spellings. The interface itself is hand-written HTML/CSS/JS with no npm packages, so there is
+        nothing to name under a frontend heading. Full license texts ship as
+        THIRD_PARTY_NOTICES_OF_DOWNLOAD2.TXT. That file also carries
+        github.com/coder/websocket (ISC) and github.com/godbus/dbus/v5
+        (BSD-3-Clause): Wails' module graph requires both, no byte of either lands in the Windows
+        binary.</p>
+    </div>
+  </section>
+
+  <div id="pill" class="pill">
+    <span id="dot" class="dot" title=""></span>
+    <span id="label" class="label">启动中</span>
+    <span class="sp"></span>
+    <span class="btns">
+      <!-- 三颗里只有这两颗的文字是静态的：暂停那颗跟着状态走（见 renderPill），
+           配置那颗的 title 跟着展开/收起走（见 setMode），都不该被静态重写盖回去。 -->
+      <button id="gear" type="button" title="配置（Esc 收起）" data-i18n="btn.config">配置</button>
+      <button id="pause" type="button" title="暂停 / 继续">暂停</button>
+      <button id="quit" type="button" title="退出" data-i18n="btn.quit" data-i18n-title="btn.quit">退出</button>
+    </span>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
+
